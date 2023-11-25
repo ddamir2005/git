@@ -1,39 +1,60 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QLineEdit, QPushButton
+from PyQt6.QtCore import Qt
 import random
+from collections import defaultdict
 
-class DiceSimulation(QWidget):
+
+class DiceStatisticsWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Моделирование статистики бросков костей")
-        self.setGeometry(100, 100, 300, 300)
-        self.layout = QVBoxLayout()
-        self.labels = []
 
-        self.simulate_dice(1000000)
+        self.setWindowTitle('Моделирование статистики за миллион бросков игральных костей')
+        self.setGeometry(100, 100, 400, 200)
 
-        for i in range(2, 13):
-            label_text = f"Сумма: {i}, Вероятность: {self.results[i] * 100 / 1000000:.2f}%"
-            label = QLabel(label_text)
-            self.labels.append(label)
-            self.layout.addWidget(label)
+        self.num_dice_label = QLabel('Введи количество костей:', self)
+        self.num_dice_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.setLayout(self.layout)
+        self.num_dice_input = QLineEdit(self)
 
-    def simulate_dice(self, num_rolls):
-        self.results = {}
+        self.generate_button = QPushButton('Сгенерировать', self)
+        self.generate_button.clicked.connect(self.generate_statistics)
 
-        for _ in range(num_rolls):
-            roll_1 = random.randint(1, 6)
-            roll_2 = random.randint(1, 6)
-            roll_sum = roll_1 + roll_2
+        self.result_label = QLabel('Тут результаты.', self)
+        self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            if roll_sum not in self.results:
-                self.results[roll_sum] = 0
-            self.results[roll_sum] += 1
+        layout = QVBoxLayout()
+        layout.addWidget(self.num_dice_label)
+        layout.addWidget(self.num_dice_input)
+        layout.addWidget(self.generate_button)
+        layout.addWidget(self.result_label)
 
-if __name__ == "__main__":
+        central_widget = QWidget(self)
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+    def generate_statistics(self):
+        num_dice = int(self.num_dice_input.text())
+
+        results = defaultdict(int)
+        total_rolls = 1000000
+
+        for _ in range(total_rolls):
+            roll_sum = sum(random.randint(1, 6) for _ in range(num_dice))
+            results[roll_sum] += 1
+
+        statistics = ''
+        for sum_, count in sorted(results.items()):
+            percentage = (count / total_rolls) * 100
+            statistics += f'Сумма {sum_}: {percentage:.2f}%\n'
+
+        self.result_label.setText(statistics)
+
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = DiceSimulation()
+
+    window = DiceStatisticsWindow()
     window.show()
+
     sys.exit(app.exec())
