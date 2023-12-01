@@ -1,6 +1,5 @@
 import csv
 
-
 def read_csv(periodictable):
     data = []
     with open('periodictable.csv', 'r', encoding='utf-8') as file:
